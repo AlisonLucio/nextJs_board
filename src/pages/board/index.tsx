@@ -9,6 +9,8 @@ import { FiPlus, FiCalendar, FiEdit2, FiTrash, FiClock } from 'react-icons/fi';
 import { SupportButton } from '../../components/SupportButton';
 import {format} from 'date-fns';
 import firebase from '../../services/firebaseConnection';
+import {util} from "protobufjs";
+import Array = util.Array;
 
 type TaskList = {
   id: string;
@@ -68,6 +70,21 @@ export default function Board({ user, data }: BoardProps){
 
   }
 
+  async function handleDelete(id: string){
+    await firebase.firestore().collection('tarefas').doc(id)
+        .delete()
+        .then(()=> {
+          console.log('DELETADO COM SUCESSO!');
+          let taskDeleted = taskList.filter (item => {
+            return (item.id !== id)
+          });
+          setTaskList(taskDeleted)
+        })
+        .catch((err)=>{
+          console.log(err)
+        })
+  }
+
   return(
     <>
     <Head>
@@ -90,7 +107,7 @@ export default function Board({ user, data }: BoardProps){
 
     <section>
       {taskList.map( task => (
-          <article className={styles.taskList}>
+          <article key={task.id} className={styles.taskList}>
             <Link href={`/board/${task.id}`}>
               <p>{task.tarefa}</p>
             </Link>
@@ -106,7 +123,7 @@ export default function Board({ user, data }: BoardProps){
                 </button>
               </div>
 
-              <button>
+              <button onClick={() => handleDelete(task.id)}>
                 <FiTrash size={20} color="#FF3636" />
                 <span>Excluir</span>
               </button>
